@@ -17,12 +17,16 @@ int main(int argc, char** argv) {
     inFile.close();
 
     Solver solver;
-    solver.setDirections(arguments.direction);
     Solution solution;
     if(arguments.algorithm == Util::Algorithm::BFS){
-        solution = solver.solveBFS2(fifteen);
+        solver.setDirections(arguments.direction);
+        solution = solver.solveBFS(fifteen);
     } else if(arguments.algorithm == Util::Algorithm::DFS){
-        solution = solver.solveDFS2(fifteen);
+        solver.setDirections(arguments.direction);
+        solution = solver.solveDFS(fifteen);
+    } else if(arguments.algorithm == Util::Algorithm::AStar){
+        solver.setHeuristic(arguments.heuristic);
+        solution = solver.solveAStar(fifteen);
     }
 
     std::ofstream outFile(arguments.outFile);

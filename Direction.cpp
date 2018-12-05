@@ -19,7 +19,7 @@ std::ostream& operator<<(std::ostream& out, const Direction& direction){
             out << 'R';
             break;
         case Direction::None:
-            out << 'None';
+            out << "None";
             break;
     }
     return out;

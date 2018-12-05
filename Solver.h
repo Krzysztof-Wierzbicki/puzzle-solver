@@ -3,6 +3,7 @@
 
 #include <vector>
 #include "Fifteen.h"
+#include "util/ArgParse.h"
 
 struct Solution{
     int length = -1;
@@ -15,13 +16,16 @@ struct Solution{
 
 class Solver {
 public:
+    Solution solveBFS(const Fifteen &root);
+    Solution solveDFS(const Fifteen &root);
+    Solution solveAStar(const Fifteen &root);
     void setDirections(const std::vector<Direction>& directions);
-    Solution solveBFS(const Fifteen& root);
-    Solution solveBFS2(const Fifteen& root);
-    Solution solveDFS(const Fifteen& root);
-    Solution solveDFS2(const Fifteen& root);
+    void setHeuristic(Util::Heuristic heuristic);
 private:
+    short manhattan(const Fifteen& fifteen);
+    short hamming(const Fifteen& fifteen);
     std::vector<Direction> m_directions;
+    short (Solver::*m_heuristic)(const Fifteen&);
 };
 
 

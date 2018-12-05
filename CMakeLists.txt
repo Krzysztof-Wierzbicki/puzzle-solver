@@ -3,7 +3,7 @@ project(solver)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_COMPILER clang++)
-set(CMAKE_CXX_FLAGS "-O3 -g3")
+set(CMAKE_CXX_FLAGS "-Ofast -g3")
 
 set(SOURCE_FILES
         util/ArgParse.cpp

@@ -3,12 +3,16 @@
 
 #include <cstdint>
 #include <iostream>
+#include <vector>
 #include "Direction.h"
 
 class Fifteen{
 public:
     Fifteen();
     Fifteen(const Fifteen& other);
+    Fifteen(Fifteen&& other) noexcept;
+    Fifteen& operator=(const Fifteen& other) noexcept;
+    Fifteen& operator=(Fifteen&& other) noexcept;
     explicit Fifteen(uint64_t hash);
     ~Fifteen();
 
@@ -19,8 +23,7 @@ public:
     Fifteen getMovedZero(Direction direction) const;
     bool isSolved() const;
     uint8_t* operator[](int index);
-    Direction getLastMove() const;
-    void setLastMove(Direction direction);
+    const uint8_t* operator[](int index) const;
     std::pair<short, short> getZero() const;
     void print(std::ostream& out) const;
     void read(std::istream& in);
@@ -31,7 +34,6 @@ private:
         short x;
         short y;
     } m_zero;
-    Direction m_lastMove = Direction::None;
 };
 
 std::istream& operator>>(std::istream& in, Fifteen& fifteen);

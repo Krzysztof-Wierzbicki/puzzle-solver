@@ -19,6 +19,31 @@ Fifteen::Fifteen(const Fifteen &other) : Fifteen() {
     self.m_zero = other.m_zero;
 }
 
+Fifteen::Fifteen(Fifteen &&other) noexcept : Fifteen() {
+    auto tmp = other.m_value;
+    other.m_value = self.m_value;
+    self.m_value = tmp;
+    self.m_zero = other.m_zero;
+}
+
+Fifteen &Fifteen::operator=(const Fifteen &other) noexcept {
+    for(int i=0; i<4; i++){
+        for(int j=0; j<4; j++){
+            self.m_value[i][j] = other.m_value[i][j];
+        }
+    }
+    self.m_zero = other.m_zero;
+    return *this;
+}
+
+Fifteen &Fifteen::operator=(Fifteen &&other) noexcept {
+    auto tmp = other.m_value;
+    other.m_value = self.m_value;
+    self.m_value = tmp;
+    self.m_zero = other.m_zero;
+    return *this;
+}
+
 Fifteen::Fifteen(uint64_t hash) : Fifteen() {
     for(short i=0; i<4; i++){
         for(short j=0; j<4; j++){
@@ -89,7 +114,6 @@ void Fifteen::moveZero(Direction direction){
         default:
             throw std::invalid_argument("Cannot move None");
     }
-    m_lastMove = direction;
 }
 
 Fifteen Fifteen::getMovedZero(Direction direction) const {
@@ -113,12 +137,8 @@ uint8_t *Fifteen::operator[](int index) {
     return m_value[index];
 }
 
-Direction Fifteen::getLastMove() const {
-    return m_lastMove;
-}
-
-void Fifteen::setLastMove(Direction direction) {
-    m_lastMove = direction;
+const uint8_t *Fifteen::operator[](int index) const {
+    return m_value[index];
 }
 
 void Fifteen::print(std::ostream &out) const {
