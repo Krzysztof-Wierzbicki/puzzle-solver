@@ -23,6 +23,8 @@ namespace Util {
                 ret.heuristic = Heuristic::Hamming;
             } else if (strcmp(argv[2], "manh") == 0) {
                 ret.heuristic = Heuristic::Manhattan;
+            } else if (strcmp(argv[2], "mdlc") == 0) {
+                ret.heuristic = Heuristic::MDLC;
             } else {
                 throw std::invalid_argument("ArgParser: Unrecognized heuristic");
             }

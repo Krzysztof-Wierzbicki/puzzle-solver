@@ -15,6 +15,7 @@ namespace Util{
     enum class Heuristic{
         Hamming,
         Manhattan,
+        MDLC,
         None
     };
 

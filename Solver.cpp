@@ -39,8 +39,6 @@ void Solver::setDirections(const std::vector<Direction>& directions) {
 }
 
 Solution Solver::solveBFS(const Fifteen &root) {
-    Solution solutionStats;
-
     Timer timer;
 
     std::queue<Fifteen> toVisit;
@@ -56,6 +54,7 @@ Solution Solver::solveBFS(const Fifteen &root) {
         const auto& current = toVisit.front();
         if(current.isSolved()){
             auto solution = getSolution(current, visited);
+            Solution solutionStats;
             solutionStats.duration = timer.get();
             solutionStats.length = solution.size();
             solutionStats.maxDepth = solution.size();
@@ -63,7 +62,7 @@ Solution Solver::solveBFS(const Fifteen &root) {
 
             solutionStats.visited = visited.size();
             solutionStats.processed = processedCount;
-            break;
+            return solutionStats;
         }
 
         for(Direction d : m_directions){
@@ -78,14 +77,13 @@ Solution Solver::solveBFS(const Fifteen &root) {
         toVisit.pop();
     }
 
-    return solutionStats;
+    return {-1, static_cast<int>(visited.size()), processedCount, 0, timer.get(), {}};
 }
 
 Solution Solver::solveDFS(const Fifteen &root) {
     //LUDR - directions array works backwards
     auto directions = m_directions;
     std::reverse(directions.begin(), directions.end());
-    Solution solutionStats;
 
     Timer timer;
 
@@ -103,6 +101,7 @@ Solution Solver::solveDFS(const Fifteen &root) {
         toVisit.pop();
         if(current.first.isSolved()){
             auto solution = getSolution(current.first, visited);
+            Solution solutionStats;
             solutionStats.duration = timer.get();
             solutionStats.length = solution.size();
             solutionStats.maxDepth = maxdepth;
@@ -110,7 +109,7 @@ Solution Solver::solveDFS(const Fifteen &root) {
 
             solutionStats.visited = visited.size();
             solutionStats.processed = processedCount;
-            break;
+            return solutionStats;
         }
         if(current.second < MAX_DEPTH) {
             for (Direction d : directions) {
@@ -128,16 +127,14 @@ Solution Solver::solveDFS(const Fifteen &root) {
         }
     }
 
-    return solutionStats;
+    return {-1, static_cast<int>(visited.size()), processedCount, maxdepth, timer.get(), {}};
 }
 
 Solution Solver::solveAStar(const Fifteen &root) {
-    Solution solutionStats;
-
     Timer timer;
 
-    //we should use priority_queue, but it's bugged, broken and fucked up (it deletes inserted object xD), and map works good enough
-    std::map<short, Fifteen> toVisit;
+    //we should use priority_queue, but it's doesn't go well with raw pointer objects (it deletes inserted object xD), and map works good enough
+    std::multimap<short, Fifteen> toVisit;
     toVisit.emplace(0, root);
 
     std::unordered_map<uint64_t, uint64_t> visited;//zapisujemy dla każdego odwiedzonego układu układ z którego przyszliśmy
@@ -153,6 +150,7 @@ Solution Solver::solveAStar(const Fifteen &root) {
         toVisit.erase(toVisit.begin());
         if(current.second.isSolved()){
             auto solution = getSolution(current.second, visited);
+            Solution solutionStats;
             solutionStats.duration = timer.get();
             solutionStats.length = solution.size();
             solutionStats.maxDepth = solution.size();
@@ -160,10 +158,10 @@ Solution Solver::solveAStar(const Fifteen &root) {
 
             solutionStats.visited = visited.size();
             solutionStats.processed = processedCount;
-            break;
+            return solutionStats;
         }
 
-        short nextCost = cost[current.second.hash()];
+        short nextCost = cost[current.second.hash()] + 1;
         for(Direction d : {Direction::R, Direction::D, Direction::U, Direction::L}){
             if(current.second.canMoveZero(d)){
                 auto next = current.second.getMovedZero(d);
@@ -171,14 +169,14 @@ Solution Solver::solveAStar(const Fifteen &root) {
                 if(costsIt == cost.end() or costsIt->second > nextCost){
                     visited.emplace(next.hash(), current.second.hash());
                     cost[next.hash()] = nextCost;
-                    nextCost += (this->*m_heuristic)(next);//c++ stahp :c
-                    toVisit.emplace(nextCost, next);
+                    short priority = nextCost + (this->*m_heuristic)(next);//c++ stahp :c
+                    toVisit.emplace(priority, next);
                 }
             };
         }
     }
 
-    return solutionStats;
+    return {-1, static_cast<int>(visited.size()), processedCount, 0, timer.get(), {}};
 }
 
 void Solver::setHeuristic(Util::Heuristic heuristic) {
@@ -186,19 +184,21 @@ void Solver::setHeuristic(Util::Heuristic heuristic) {
         m_heuristic = &Solver::manhattan;
     }else if(heuristic == Util::Heuristic::Hamming){
         m_heuristic = &Solver::hamming;
+    }else if(heuristic == Util::Heuristic::MDLC){
+        m_heuristic = &Solver::mdlc;
     }
 }
 
 short Solver::manhattan(const Fifteen &fifteen) {
     short manhattanDistanceSum = 0;
-    for (short x = 0; x < 4; x++) { // x-dimension, traversing rows (i)
-        for (short y = 0; y < 4; y++) { // y-dimension, traversing cols (j)
-            const short value = fifteen[x][y]; // tiles array contains board elements
+    for (short x = 0; x < 4; x++) {
+        for (short y = 0; y < 4; y++) {
+            const short value = fifteen[x][y];
             if (value != 0) { // we don't compute MD for element 0
-                short targetX = (value - 1) / 4; // expected x-coordinate (row)
-                short targetY = (value - 1) % 4; // expected y-coordinate (col)
-                short dx = x - targetX; // x-distance to expected coordinate
-                short dy = y - targetY; // y-distance to expected coordinate
+                short targetX = (value - 1) / 4; // expected x-coordinate
+                short targetY = (value - 1) % 4; // expected y-coordinate
+                short dx = x - targetX;
+                short dy = y - targetY;
                 manhattanDistanceSum += abs(dx) + abs(dy);
             }
         }
@@ -210,8 +210,8 @@ short Solver::manhattan(const Fifteen &fifteen) {
 short Solver::hamming(const Fifteen &fifteen) {
     short misplacedTilesCount = 0;
     short tile = 1;
-    for (short x = 0; x < 4; x++) { // x-dimension, traversing rows (i)
-        for (short y = 0; y < 4; y++) { // y-dimension, traversing cols (j)
+    for (short x = 0; x < 4; x++) {
+        for (short y = 0; y < 4; y++) {
             if (fifteen[x][y] != tile%16){
                 ++misplacedTilesCount;
             }
@@ -219,4 +219,34 @@ short Solver::hamming(const Fifteen &fifteen) {
         }
     }
     return misplacedTilesCount;
+}
+
+// manhattan distance with linear conflict
+short Solver::mdlc(const Fifteen &fifteen) {
+    short manhattanDistanceSum = 0;
+    for (short x = 0; x < 4; x++) {
+        for (short y = 0; y < 4; y++) {
+            const short value = fifteen[x][y];
+            if (value != 0) { // we don't compute MD for element 0
+                short targetX = (value - 1) / 4; // expected x-coordinate
+                short targetY = (value - 1) % 4; // expected y-coordinate
+                short dx = x - targetX;
+                short dy = y - targetY;
+                manhattanDistanceSum += abs(dx) + abs(dy);
+                // add 2 per linear conflict
+                if (targetX != x) {
+                    continue;
+                }
+                for (short y2 = 0; y2 < y; y2++) {
+                    if (fifteen[x][y2] == 0) {
+                        continue;
+                    }
+                    if ((fifteen[x][y2] - 1) / 4 == x and fifteen[x][y] < fifteen[x][y2]) {
+                        manhattanDistanceSum += 2;
+                    }
+                }
+            }
+        }
+    }
+    return manhattanDistanceSum;
 }

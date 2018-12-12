@@ -20,7 +20,7 @@
 # actual program, using the absolute (or relative) path, for example:
 #  progcmd='java -jar /home/user/15puzzle/bin/puzzleval.jar'
 
-progcmd='echo program'
+progcmd='python3 puzzleval.py'
 sol_filename_regex='^([a-zA-Z0-9]+_[0-9]+_[0-9]+)_[a-zA-Z]+_[a-zA-Z]+_sol.txt$'
 
 n_correct_sols=0

@@ -23,7 +23,8 @@ public:
     void setHeuristic(Util::Heuristic heuristic);
 private:
     short manhattan(const Fifteen& fifteen);
-    short hamming(const Fifteen& fifteen);
+    short hamming(const Fifteen& fifteen);// misplaced tiles heuristic
+    short mdlc(const Fifteen& fifteen);// manhattan distance + linear conflicts
     std::vector<Direction> m_directions;
     short (Solver::*m_heuristic)(const Fifteen&);
 };

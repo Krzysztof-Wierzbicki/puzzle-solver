@@ -25,7 +25,7 @@
 
 progcmd='echo program'
 orders=(RDUL RDLU DRUL DRLU LUDR LURD ULDR ULRD)
-heuristics=(hamm manh)
+heuristics=(hamm manh mdlc)
 init_filename_regex='^[a-zA-Z0-9]+_[0-9]+_[0-9]+.txt$'
 
 usage() {
